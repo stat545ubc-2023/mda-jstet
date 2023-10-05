@@ -1,6 +1,12 @@
 # STAT 545 @ UBC - Mini Data-Analysis
 
-Project to be completed in the Course STAT 545 at UBC in winter term 2023. It consists of a single `.Rmd` and a corresponding Markdown document.
+Project to be completed in the Course STAT 545 at UBC in winter term 2023. 
+
+## Repo Contents
+
+- The analysis can be found in `main.Rmd`
+- The output of the `.Rmd` is `main.md`
+- The folder `main_files` contains created figures as .png
 
 ## Reproducing results
 
