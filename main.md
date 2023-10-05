@@ -533,45 +533,50 @@ sufficient comments for a reader to understand your reasoning and code.
 
 <!-------------------------- Start your work below ---------------------------->
 
+### Investigate how many missing values there are per variable. Can you find a way to plot this?
+
+This is useful to see which variable one can reasonably include in
+further analysis or with which limitations. For example, `date_planted`
+has more than 50% missing values. My theory is that many trees were
+planted before the date of the planting was recorded.
+
 ``` r
-glimpse(vancouver_trees)
+# creating a new tibble with missing values
+na_summary <- tibble(
+  column_name = colnames(vancouver_trees),
+  number_of_nas = colSums(is.na(vancouver_trees)),
+  percentage_of_nas = colSums(is.na(vancouver_trees)) / nrow(vancouver_trees) * 100
+)
+# filtering out columns with zero nas becaus that conveys no info in plot
+na_summary <- na_summary %>% filter(number_of_nas > 0)
+
+# plotting the percentage of missing values
+ggplot(na_summary, aes(x = column_name, y = percentage_of_nas)) +
+  geom_bar(stat = "identity")
 ```
 
-    ## Rows: 146,611
-    ## Columns: 20
-    ## $ tree_id            <dbl> 149556, 149563, 149579, 149590, 149604, 149616, 149…
-    ## $ civic_number       <dbl> 494, 450, 4994, 858, 5032, 585, 4909, 4925, 4969, 7…
-    ## $ std_street         <chr> "W 58TH AV", "W 58TH AV", "WINDSOR ST", "E 39TH AV"…
-    ## $ genus_name         <chr> "ULMUS", "ZELKOVA", "STYRAX", "FRAXINUS", "ACER", "…
-    ## $ species_name       <chr> "AMERICANA", "SERRATA", "JAPONICA", "AMERICANA", "C…
-    ## $ cultivar_name      <chr> "BRANDON", NA, NA, "AUTUMN APPLAUSE", NA, "CHANTICL…
-    ## $ common_name        <chr> "BRANDON ELM", "JAPANESE ZELKOVA", "JAPANESE SNOWBE…
-    ## $ assigned           <chr> "N", "N", "N", "Y", "N", "N", "N", "N", "N", "N", "…
-    ## $ root_barrier       <chr> "N", "N", "N", "N", "N", "N", "N", "N", "N", "N", "…
-    ## $ plant_area         <chr> "N", "N", "4", "4", "4", "B", "6", "6", "3", "3", "…
-    ## $ on_street_block    <dbl> 400, 400, 4900, 800, 5000, 500, 4900, 4900, 4900, 7…
-    ## $ on_street          <chr> "W 58TH AV", "W 58TH AV", "WINDSOR ST", "E 39TH AV"…
-    ## $ neighbourhood_name <chr> "MARPOLE", "MARPOLE", "KENSINGTON-CEDAR COTTAGE", "…
-    ## $ street_side_name   <chr> "EVEN", "EVEN", "EVEN", "EVEN", "EVEN", "ODD", "ODD…
-    ## $ height_range_id    <dbl> 2, 4, 3, 4, 2, 2, 3, 3, 2, 2, 2, 5, 3, 2, 2, 2, 2, …
-    ## $ diameter           <dbl> 10.00, 10.00, 4.00, 18.00, 9.00, 5.00, 15.00, 14.00…
-    ## $ curb               <chr> "N", "N", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "…
-    ## $ date_planted       <date> 1999-01-13, 1996-05-31, 1993-11-22, 1996-04-29, 19…
-    ## $ longitude          <dbl> -123.1161, -123.1147, -123.0846, -123.0870, -123.08…
-    ## $ latitude           <dbl> 49.21776, 49.21776, 49.23938, 49.23469, 49.23894, 4…
+![](main_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
-### Create a new variable based on other variables in your data (only if it makes sense) and explore the relationship between 2 variables in a plot.
+### Explore the relationship between 2 variables in a plot
+
+This plot makes sense because it gives an impression of the development
+of tree planting in vancouver. One can see that the oldest time of tree
+planting is around 1990. Tree planting decreased rapidly to a relative
+low level in around 2013. These findings have to be viewed with caution,
+because date\_planted has many NAs and we don’t know why.
 
 ``` r
+# creating a new variable that extracts the year from the date
 vancouver_trees <- vancouver_trees %>%
+  mutate(date_planted = as.Date(date_planted)) %>%
   mutate(year = year(date_planted))
 
+# grouping by year and counting the number of trees
 tree_count <- vancouver_trees %>%
   group_by(year) %>%
   summarise(num_trees = n())
 
-max_count <- max(tree_count$num_trees)
-
+# plotting the number of trees per year
 ggplot(tree_count, aes(x = year, y = num_trees)) +
   geom_line() +
   xlab("Year") +
@@ -583,6 +588,52 @@ ggplot(tree_count, aes(x = year, y = num_trees)) +
     ## Warning: Removed 1 row containing missing values (`geom_line()`).
 
 ![](main_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+### Plot the distribution of a numeric variable
+
+This plot gives an impression of what height\_range\_id could be. We
+will just assume that a higher number in id means the tree is higher,
+but we dont know to which values this corresponds.
+
+``` r
+ggplot(vancouver_trees, aes(x = height_range_id)) +
+  geom_bar()
+```
+
+![](main_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+### Create a new variable based on other variables
+
+Creating the variable age makes sense because I want to use it in
+further analysis.
+
+``` r
+# calculating the maximum age
+max_year <- vancouver_trees %>%
+  summarize(max_year = max(year, na.rm = TRUE)) %>%
+  pull(max_year)
+# adding the new variable age, which is calculated by substracting year of planting from the maximum year
+vancouver_trees <- vancouver_trees %>%
+  mutate(age = max_year - year(date_planted))
+```
+
+### Use a density plot to explore any of your variables (that are suitable for this type of plot)
+
+This plot makes sense because it gives an impression of the distribution
+of the age of trees in vancouver based on the street side. Street side
+apparently also includes “PARK” and that uncovered an interesting
+pattern: trees in parks are much younger than trees on the streets. In
+the case of parks, there are 3 peaks. Does this correlate with the
+establishment of new parks?
+
+``` r
+ggplot(vancouver_trees, aes(x = age, fill = street_side_name)) +
+  geom_density(alpha = 0.5)
+```
+
+    ## Warning: Removed 76548 rows containing non-finite values (`stat_density()`).
+
+![](main_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 <!----------------------------------------------------------------------------->
 
 # Task 3: Choose research questions
@@ -594,6 +645,19 @@ research question that interested you (Task 1.4). Now it’s time to pick
 Write the 4 questions and any additional comments below.
 
 <!--- *****START HERE***** --->
+
+1.  Which neighborhood has the most diverse trees? One would have to
+    define how to measure diversity. Probably more than just counting
+    the number of species.
+2.  Does neighborhood affect tree growth speed (by
+    diameter/height\_range\_id) One could choose a species with many
+    trees represented in all neighborhoods and then compare the
+    relationships of age and diameter per neighborhood.
+3.  Does the existence of a root barrier have an influence on diameter?
+    Compare distributions of diameter with and without root barrier
+4.  Were trees that have no value for `date_planted` planted before the
+    start of the records? Relationship between NA and
+    diameter/height\_range\_id
 
 <!----------------------------->
 
