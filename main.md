@@ -33,6 +33,10 @@ library(tidyverse)
     ## ✖ dplyr::lag()    masks stats::lag()
     ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 
+``` r
+library(lubridate)
+```
+
 3.  Make a repository in the <https://github.com/stat545ubc-2023>
     Organization. You can do this by following the steps found on canvas
     in the entry called [MDA: Create a
@@ -529,6 +533,56 @@ sufficient comments for a reader to understand your reasoning and code.
 
 <!-------------------------- Start your work below ---------------------------->
 
+``` r
+glimpse(vancouver_trees)
+```
+
+    ## Rows: 146,611
+    ## Columns: 20
+    ## $ tree_id            <dbl> 149556, 149563, 149579, 149590, 149604, 149616, 149…
+    ## $ civic_number       <dbl> 494, 450, 4994, 858, 5032, 585, 4909, 4925, 4969, 7…
+    ## $ std_street         <chr> "W 58TH AV", "W 58TH AV", "WINDSOR ST", "E 39TH AV"…
+    ## $ genus_name         <chr> "ULMUS", "ZELKOVA", "STYRAX", "FRAXINUS", "ACER", "…
+    ## $ species_name       <chr> "AMERICANA", "SERRATA", "JAPONICA", "AMERICANA", "C…
+    ## $ cultivar_name      <chr> "BRANDON", NA, NA, "AUTUMN APPLAUSE", NA, "CHANTICL…
+    ## $ common_name        <chr> "BRANDON ELM", "JAPANESE ZELKOVA", "JAPANESE SNOWBE…
+    ## $ assigned           <chr> "N", "N", "N", "Y", "N", "N", "N", "N", "N", "N", "…
+    ## $ root_barrier       <chr> "N", "N", "N", "N", "N", "N", "N", "N", "N", "N", "…
+    ## $ plant_area         <chr> "N", "N", "4", "4", "4", "B", "6", "6", "3", "3", "…
+    ## $ on_street_block    <dbl> 400, 400, 4900, 800, 5000, 500, 4900, 4900, 4900, 7…
+    ## $ on_street          <chr> "W 58TH AV", "W 58TH AV", "WINDSOR ST", "E 39TH AV"…
+    ## $ neighbourhood_name <chr> "MARPOLE", "MARPOLE", "KENSINGTON-CEDAR COTTAGE", "…
+    ## $ street_side_name   <chr> "EVEN", "EVEN", "EVEN", "EVEN", "EVEN", "ODD", "ODD…
+    ## $ height_range_id    <dbl> 2, 4, 3, 4, 2, 2, 3, 3, 2, 2, 2, 5, 3, 2, 2, 2, 2, …
+    ## $ diameter           <dbl> 10.00, 10.00, 4.00, 18.00, 9.00, 5.00, 15.00, 14.00…
+    ## $ curb               <chr> "N", "N", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "Y", "…
+    ## $ date_planted       <date> 1999-01-13, 1996-05-31, 1993-11-22, 1996-04-29, 19…
+    ## $ longitude          <dbl> -123.1161, -123.1147, -123.0846, -123.0870, -123.08…
+    ## $ latitude           <dbl> 49.21776, 49.21776, 49.23938, 49.23469, 49.23894, 4…
+
+### Create a new variable based on other variables in your data (only if it makes sense) and explore the relationship between 2 variables in a plot.
+
+``` r
+vancouver_trees <- vancouver_trees %>%
+  mutate(year = year(date_planted))
+
+tree_count <- vancouver_trees %>%
+  group_by(year) %>%
+  summarise(num_trees = n())
+
+max_count <- max(tree_count$num_trees)
+
+ggplot(tree_count, aes(x = year, y = num_trees)) +
+  geom_line() +
+  xlab("Year") +
+  ylab("Number of Trees Planted") +
+  ggtitle("Number of Trees Planted Each Year") +
+  coord_cartesian(ylim = c(0, 4000))
+```
+
+    ## Warning: Removed 1 row containing missing values (`geom_line()`).
+
+![](main_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 <!----------------------------------------------------------------------------->
 
 # Task 3: Choose research questions

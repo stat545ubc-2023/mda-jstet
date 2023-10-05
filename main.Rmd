@@ -19,6 +19,7 @@ And hopefully the first of many. Let's get started:
 ```{r}
 library(datateachr)
 library(tidyverse)
+library(lubridate)
 ```
 
 3.  Make a repository in the <https://github.com/stat545ubc-2023> Organization. You can do this by following the steps found on canvas in the entry called [MDA: Create a repository](https://canvas.ubc.ca/courses/126199/pages/mda-create-a-repository). One completed, your repository should automatically be listed as part of the stat545ubc-2023 Organization.
@@ -206,7 +207,73 @@ Make sure that you're using dplyr and ggplot2 rather than base R for this task. 
 2.2 **(4 points)** For each of the 4 exercises that you complete, provide a *brief explanation* of why you chose that exercise in relation to your data (in other words, why does it make sense to do that?), and sufficient comments for a reader to understand your reasoning and code.
 
 <!-------------------------- Start your work below ---------------------------->
+### Investigate how many missing values there are per variable. Can you find a way to plot this?
 
+This is useful to see which variable one can reasonably include in further analysis or with which limitations. For example, `date_planted` has more than 50% missing values. My theory is that many trees were planted before the date of the planting was recorded.
+
+```{r include=TRUE}
+# creating a new tibble with missing values
+na_summary <- tibble(
+  column_name = colnames(vancouver_trees),
+  number_of_nas = colSums(is.na(vancouver_trees)),
+  percentage_of_nas = colSums(is.na(vancouver_trees)) / nrow(vancouver_trees) * 100
+)
+# filtering out columns with zero nas becaus that conveys no info in plot
+na_summary <- na_summary %>% filter(number_of_nas > 0)
+
+# plotting the percentage of missing values
+ggplot(na_summary, aes(x = column_name, y = percentage_of_nas)) +
+  geom_bar(stat = "identity")
+```
+
+### Explore the relationship between 2 variables in a plot
+This plot makes sense because it gives an impression of the development of tree planting in vancouver. One can see that the oldest time of tree planting is around 1990. Tree planting decreased rapidly to a relative low level in around 2013. These findings have to be viewed with caution, because date_planted has many NAs and we don't know why. 
+
+```{r include=TRUE}
+# creating a new variable that extracts the year from the date
+vancouver_trees <- vancouver_trees %>%
+  mutate(date_planted = as.Date(date_planted)) %>%
+  mutate(year = year(date_planted))
+
+# grouping by year and counting the number of trees
+tree_count <- vancouver_trees %>%
+  group_by(year) %>%
+  summarise(num_trees = n())
+
+# plotting the number of trees per year
+ggplot(tree_count, aes(x = year, y = num_trees)) +
+  geom_line() +
+  xlab("Year") +
+  ylab("Number of Trees Planted") +
+  ggtitle("Number of Trees Planted Each Year") +
+  coord_cartesian(ylim = c(0, 4000))
+```
+
+### Plot the distribution of a numeric variable
+This plot gives an impression of what height_range_id could be. We will just assume that a higher number in id means the tree is higher, but we dont know to which values this corresponds.
+```{r include=TRUE}
+ggplot(vancouver_trees, aes(x = height_range_id)) +
+  geom_bar()
+```
+
+### Create a new variable based on other variables 
+Creating the variable age makes sense because I want to use it in further analysis. 
+
+```{r include=TRUE}
+# calculating the maximum age
+max_year <- vancouver_trees %>%
+  summarize(max_year = max(year, na.rm = TRUE)) %>%
+  pull(max_year)
+# adding the new variable age, which is calculated by substracting year of planting from the maximum year
+vancouver_trees <- vancouver_trees %>%
+  mutate(age = max_year - year(date_planted))
+```
+### Use a density plot to explore any of your variables (that are suitable for this type of plot)
+This plot makes sense because it gives an impression of the distribution of the age of trees in vancouver based on the street side. Street side apparently also includes "PARK" and that uncovered an interesting pattern: trees in parks are much younger than trees on the streets. In the case of parks, there are 3 peaks. Does this correlate with the establishment of new parks?
+```{r include=TRUE}
+ggplot(vancouver_trees, aes(x = age, fill = street_side_name)) +
+  geom_density(alpha = 0.5)
+```
 <!----------------------------------------------------------------------------->
 
 # Task 3: Choose research questions 
@@ -214,6 +281,14 @@ Make sure that you're using dplyr and ggplot2 rather than base R for this task. 
 **(4 points)** So far, you have chosen a dataset and gotten familiar with it through exploring the data. You have also brainstormed one research question that interested you (Task 1.4).  Now it's time to pick 4 research questions that you would like to explore in Milestone 2! Write the 4 questions and any additional comments below. 
 
 <!--- *****START HERE***** --->
+1. Which neighborhood has the most diverse trees?
+One would have to define how to measure diversity. Probably more than just counting the number of species.
+2. Does neighborhood affect tree growth speed (by diameter/height_range_id) 
+One could choose a species with many trees represented in all neighborhoods and then compare the relationships of age and diameter per neighborhood.
+3. Does the existence of a root barrier have an influence on diameter?
+Compare distributions of diameter with and without root barrier
+4. Were trees that have no value for `date_planted` planted before the start of the records?
+Relationship between NA and diameter/height_range_id
 
 <!----------------------------->
 
