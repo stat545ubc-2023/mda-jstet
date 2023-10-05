@@ -85,10 +85,10 @@ And that is exactly the first thing that you will do!
 <!-------------------------- Start your work below ---------------------------->
 
 
-1: building_permits
-2: vancouver_trees
-3: flow_sample
-4: parking_meters
+1. building_permits
+2. vancouver_trees
+3. flow_sample
+4. parking_meters
 
 <!----------------------------------------------------------------------------->
 
@@ -169,9 +169,9 @@ parking_meters %>% filter(geo_local_area == "Arbutus-Ridge") %>% count(credit_ca
 <!-------------------------- Start your work below ---------------------------->
 ## Decision for a Dataset
 I am choosing the `vancouver_trees` dataset because:
-    1. the building_permits dataset only spans 3 years
-    2. analyzing the flow dataset would require more domain knowledge
-    3. i dont think i can get interesting results from the parking_meters dataset 
+1. the building_permits dataset only spans 3 years
+2. analyzing the flow dataset would require more domain knowledge
+3. i dont think i can get interesting results from the parking_meters dataset 
 <!----------------------------------------------------------------------------->
 
 1.4 **(2 points)** Time for a  final decision! Going back to the beginning, it's important to have an *end goal* in mind. For example, if I had chosen the `titanic` dataset for my project, I might've wanted to explore the relationship between survival and other variables. Try to think of 1 research question that you would want to answer with your dataset. Note it down below.
