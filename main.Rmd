@@ -159,7 +159,7 @@ parking_meters %>% count(credit_card)
 ```{r include=TRUE}
 parking_meters %>% filter(geo_local_area == "Downtown") %>% count(credit_card)
 ```
-### Arbutus has no parking_meters where you can pay by credit card
+#### Arbutus has no parking_meters where you can pay by credit card
 ```{r include=TRUE}
 parking_meters %>% filter(geo_local_area == "Arbutus-Ridge") %>% count(credit_card)
 ```
@@ -170,6 +170,7 @@ parking_meters %>% filter(geo_local_area == "Arbutus-Ridge") %>% count(credit_ca
 <!-------------------------- Start your work below ---------------------------->
 ## Decision for a Dataset
 I am choosing the `vancouver_trees` dataset because:
+
 1. the building_permits dataset only spans 3 years
 2. analyzing the flow dataset would require more domain knowledge
 3. i dont think i can get interesting results from the parking_meters dataset 
