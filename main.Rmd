@@ -84,10 +84,11 @@ And that is exactly the first thing that you will do!
 
 <!-------------------------- Start your work below ---------------------------->
 
-1: CHOICE_1\_HERE\
-2: CHOICE_2\_HERE\
-3: CHOICE_3\_HERE\
-4: CHOICE_4\_HERE
+
+1: building_permits
+2: vancouver_trees
+3: flow_sample
+4: parking_meters
 
 <!----------------------------------------------------------------------------->
 
@@ -96,24 +97,87 @@ And that is exactly the first thing that you will do!
 *Hint:* This is one of those times when you should think about the cleanliness of your analysis. I added a single code chunk for you below, but do you want to use more than one? Would you like to write more comments outside of the code chunk?
 
 <!-------------------------- Start your work below ---------------------------->
-
-```{r}
-### EXPLORE HERE ###
-steam_games
+### Dataset: building_permits
+#### Number of Rows, Column names and types
+```{r include=TRUE}
+glimpse(building_permits)
+```
+#### Quick glance at address formatting
+```{r include=TRUE}
+head(building_permits$address)
+```
+#### Range of years
+```{r include=TRUE}
+min(building_permits$year)
+max(building_permits$year)
 ```
 
+### Dataset: vancouver_trees
+#### Numner of Rows, Column names and types:
+```{r include=TRUE}
+glimpse(vancouver_trees)
+```
+#### Species counts 
+```{r include=TRUE}
+vancouver_trees %>% count(common_name) %>% arrange(desc(n))
+```
+#### Mean Diameter
+```{r include=TRUE}
+summary(vancouver_trees$diameter)
+```
+#### Show tree with 435cm diameter
+```{r include=TRUE}
+vancouver_trees %>% filter(diameter == 435)
+```
+### Dataset: flow_sample
+#### Number of Rows, Column names and types:
+```{r include=TRUE}
+glimpse(flow_sample)
+```
+#### Years with highest "flow"
+```{r include=TRUE}
+flow_sample %>% group_by(year) %>% summarize(max_flow = max(flow)) %>% arrange(desc(max_flow))
+```
+### Dataset: parking_meters
+#### Number of Rows, Column names and types:
+```{r include=TRUE}
+glimpse(parking_meters)
+```
+#### Distribution of payment method
+```{r include=TRUE}
+parking_meters %>% count(credit_card)
+```
+#### Which area has most parking meters where you can only pay with cash (relative)
+```{r include=TRUE}
+  parking_meters %>%
+    group_by(geo_local_area) %>% 
+    summarize(cash = sum(credit_card == "No") / n()) %>% 
+    arrange(desc(cash))
+```
+#### Downtown has NAs in `credit_card`
+```{r include=TRUE}
+parking_meters %>% filter(geo_local_area == "Downtown") %>% count(credit_card)
+```
+### Arbutus has no parking_meters where you can pay by credit card
+```{r include=TRUE}
+parking_meters %>% filter(geo_local_area == "Arbutus-Ridge") %>% count(credit_card)
+```
 <!----------------------------------------------------------------------------->
 
 1.3 **(1 point)** Now that you've explored the 4 datasets that you were initially most interested in, let's narrow it down to 1. What lead you to choose this one? Briefly explain your choice below.
 
 <!-------------------------- Start your work below ---------------------------->
-
+## Decision for a Dataset
+I am choosing the `vancouver_trees` dataset because:
+    1. the building_permits dataset only spans 3 years
+    2. analyzing the flow dataset would require more domain knowledge
+    3. i dont think i can get interesting results from the parking_meters dataset 
 <!----------------------------------------------------------------------------->
 
 1.4 **(2 points)** Time for a  final decision! Going back to the beginning, it's important to have an *end goal* in mind. For example, if I had chosen the `titanic` dataset for my project, I might've wanted to explore the relationship between survival and other variables. Try to think of 1 research question that you would want to answer with your dataset. Note it down below.
 
 <!-------------------------- Start your work below ---------------------------->
-
+Is there a relationship between species and neighborhood name? Meaning are there neighborhoods that have more of one species than others etc.
 <!----------------------------------------------------------------------------->
 
 # Important note
