@@ -26,7 +26,7 @@ library(tidyverse)
     ## ✔ dplyr     1.1.3     ✔ readr     2.1.4
     ## ✔ forcats   1.0.0     ✔ stringr   1.5.0
     ## ✔ ggplot2   3.4.3     ✔ tibble    3.2.1
-    ## ✔ lubridate 1.9.2     ✔ tidyr     1.3.0
+    ## ✔ lubridate 1.9.3     ✔ tidyr     1.3.0
     ## ✔ purrr     1.0.2     
     ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
@@ -429,7 +429,7 @@ parking_meters %>% filter(geo_local_area == "Downtown") %>% count(credit_card)
     ## 2 Yes           882
     ## 3 <NA>           15
 
-### Arbutus has no parking\_meters where you can pay by credit card
+#### Arbutus has no parking\_meters where you can pay by credit card
 
 ``` r
 parking_meters %>% filter(geo_local_area == "Arbutus-Ridge") %>% count(credit_card)
@@ -450,11 +450,13 @@ to choose this one? Briefly explain your choice below.
 
 ## Decision for a Dataset
 
-I am choosing the `vancouver_trees` dataset because: 1. the
-building\_permits dataset only spans 3 years 2. analyzing the flow
-dataset would require more domain knowledge 3. i dont think i can get
-interesting results from the parking\_meters dataset
-<!----------------------------------------------------------------------------->
+I am choosing the `vancouver_trees` dataset because:
+
+1.  the building\_permits dataset only spans 3 years
+2.  analyzing the flow dataset would require more domain knowledge
+3.  i dont think i can get interesting results from the parking\_meters
+    dataset
+    <!----------------------------------------------------------------------------->
 
 1.4 **(2 points)** Time for a final decision\! Going back to the
 beginning, it’s important to have an *end goal* in mind. For example, if
@@ -555,7 +557,7 @@ ggplot(na_summary, aes(x = column_name, y = percentage_of_nas)) +
   geom_bar(stat = "identity")
 ```
 
-![](main_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](milestone_1_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ### Explore the relationship between 2 variables in a plot
 
@@ -587,7 +589,7 @@ ggplot(tree_count, aes(x = year, y = num_trees)) +
 
     ## Warning: Removed 1 row containing missing values (`geom_line()`).
 
-![](main_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](milestone_1_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ### Plot the distribution of a numeric variable
 
@@ -600,7 +602,7 @@ ggplot(vancouver_trees, aes(x = height_range_id)) +
   geom_bar()
 ```
 
-![](main_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](milestone_1_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ### Create a new variable based on other variables
 
@@ -633,7 +635,7 @@ ggplot(vancouver_trees, aes(x = age, fill = street_side_name)) +
 
     ## Warning: Removed 76548 rows containing non-finite values (`stat_density()`).
 
-![](main_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](milestone_1_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 <!----------------------------------------------------------------------------->
 
 # Task 3: Choose research questions
