@@ -45,6 +45,9 @@ Begin by loading your data and the tidyverse package below:
 ```{r, message = FALSE}
 library(datateachr) # <- might contain the data you picked!
 library(tidyverse)
+library(gridExtra)
+library(here)
+library(broom)
 ```
 
 # Task 1: Process and summarize your data 
@@ -106,17 +109,41 @@ Make sure it's clear what research question you are doing each operation for!
 <!------------------------- Start your work below ----------------------------->
 #### Which neighborhood has the most diverse trees? 
 ##### Compute the proportion and counts in each category of one categorical variable across the groups of another categorical variable from your data. Do not use the function `table()`!
+As I am intereseted in tree diversity, it makes sense to calculate how many trees if each species occur in each neighborhood.
 ```{r include=TRUE}
 (species_counts <- vancouver_trees %>%
   group_by(neighbourhood_name, species_name) %>%
   summarize(count = n()) %>%
   mutate(proportion = count / sum(count)))
 ```
+#####  Create 3 histograms, with each histogram having different sized bins. Pick the "best" one and explain why it is the best.
 
+A bin width of 0.06 is a good choice in the case because it strikes a balance between capturing important patterns in the data and avoiding excessive noise. The smooth and continuous histogram bars make the visualization visually appealing and easy to interpret. Additionally, a bin width of 0.06 aligns well with the granularity of the proportion data, enhancing interpretability.
+
+This plot makes sense because it allows us to see that most trees species are relatively rare in neighborhoods. 
+```{r include=TRUE}
+histogram1 <- ggplot(species_counts, aes(x = proportion)) +
+  geom_histogram(binwidth = 0.01) +
+  labs(x = "Proportion", y = "Frequency") +
+  labs(title = "Binwidth = 0.01")
+
+histogram2 <- ggplot(species_counts, aes(x = proportion)) +
+  geom_histogram(binwidth = 0.006) +
+  labs(x = "Proportion", y = "Frequency") +
+  labs(title = "Binwidth = 0.006")
+
+histogram3 <- ggplot(species_counts, aes(x = proportion)) +
+  geom_histogram(binwidth = 0.004) +
+  labs(x = "Proportion", y = "Frequency") +
+  labs(title = "Binwidth = 0.004")
+
+grid.arrange(histogram1, histogram2, histogram3, nrow = 2, top = "Histograms of Proportions of Tree Species relative to Neighborhood")
+```
 
 
 #### Does neighborhood affect tree growth speed?
 ##### Compute the *range*, *mean*, and *two other summary statistics* of **one numerical variable** across the groups of **one categorical variable** from your data.
+Computing summariy statistics for diameter makes sense for this task because it allows us to compare this across neighborhoods. Diamater is a first indicator for tree growth speed.
 ```{r include=TRUE}
 vancouver_trees <- vancouver_trees %>% mutate(neighbourhood_name = factor(neighbourhood_name))
 (summary_stats <- vancouver_trees %>%
@@ -128,10 +155,53 @@ vancouver_trees <- vancouver_trees %>% mutate(neighbourhood_name = factor(neighb
     min = min(diameter),
     max = max(diameter)
 ) %>% arrange(desc(mean)))
+```
+##### Subsetting data for most common tree
+Visualizing for one tree only for now so that growth speed differences between species do not bias the result.
+```{r include=TRUE}
+tree_numbers <- vancouver_trees %>%
+  group_by(species_name) %>%
+  summarize(count = n()) %>%
+  arrange(desc(count))
+
+# creating a new variable that extracts the year from the date
+vancouver_trees <- vancouver_trees %>%
+  mutate(date_planted = as.Date(date_planted)) %>%
+  mutate(year = year(date_planted))
+
+# calculating the maximum age
+max_year <- vancouver_trees %>%
+  summarize(max_year = max(year, na.rm = TRUE)) %>%
+  pull(max_year)
+
+# Adding the new variable age, which is calculated by substracting year of planting from the maximum year
+vancouver_trees <- vancouver_trees %>%
+  mutate(age = max_year - year(date_planted))
+
+most_common <- vancouver_trees %>%
+  filter(species_name == as.character(tree_numbers[1, "species_name"]))
+```
+
+##### Create a graph that has at least two geom layers.
+This graph visualizes the relationship between age and diameter for the most common tree species. By using both the point and the line geom layers, you can effectively convey two important aspects of the data: the individual data points and the trend line representing the overall relationship between age and diameter.
+```{r include=TRUE}
+most_common_flt <- most_common %>%
+   mutate(z_score = abs((diameter - mean(diameter)) / sd(diameter))) %>%
+  filter(z_score < 3) %>% 
+  na.omit()
+
+ggplot(most_common_flt, aes(x = age, y = diameter)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE, fullrange = TRUE) +
+  labs(title = "Scatter Plot of Age and Diameter for Most Common Tree Species by Neighborhood") +
+  guides(color = "none")
 
 ```
+
+
 #### Does the existence of a root barrier have an influence on diameter? 
 ##### Compute the number of observations for at least one of your categorical variables. Do not use the function `table()`!
+This calculation makes sense for the question because it allows us to compare the diameter of trees with and without a root barrier. By calculating the mean, median, standard deviation, minimum, maximum, and count of observations for each category of the root_barrier variable, we can analyze the differences in diameter between the two groups.
 ```{r include=TRUE}
 vancouver_trees <- vancouver_trees %>% mutate(root_barrier = factor(root_barrier))
 (summary_stats <- vancouver_trees %>%
@@ -141,16 +211,37 @@ vancouver_trees <- vancouver_trees %>% mutate(root_barrier = factor(root_barrier
     median = median(diameter),
     sd = sd(diameter),
     min = min(diameter),
-    max = max(diameter)
+    max = max(diameter),
+    count = n()
 ) %>% arrange(desc(mean)))
 
 ```
+###### Create a graph that has at least two geom layers.
+This graph makes sense because it visualizes the relationship between age and diameter  while also considering the presence of a root barrier. Diameter is relative to age so it makes sense to include this variable.
+```{r include=TRUE}
+# removing outliers
+van_trees_flt <- vancouver_trees %>%
+  mutate(z_score = abs((diameter - mean(diameter)) / sd(diameter))) %>%
+  filter(z_score < 3) 
+
+# removing trees older than 20 years because they have no root barrier apparently
+van_trees_flt_young <- van_trees_flt %>%
+  filter(age < 20) %>%
+  na.omit() 
+
+(scatter_plot <- ggplot(van_trees_flt_young, aes(x = age, y = diameter, color = root_barrier)) +
+  geom_point() +
+  geom_smooth(method = "loess", se = FALSE, fullrange = TRUE, ) +
+  labs(title = "Scatter Plot of Age vs. Diameter coloured by Root Barrier"))
+```
 #### Were trees that have no value for date_planted planted before the start of the records? 
 ##### Create a categorical variable with 3 or more groups from an existing numerical variable. You can use this new variable in the other tasks! *An example: age in years into "child, teen, adult, senior".*
+I adapted this task to only create 2 groups.
 
 ```{r include=TRUE}
-vancouver_trees <- vancouver_trees %>% mutate(planted_on_record = factor(case_when(is.na(date_planted) ~ FALSE, !is.na(date_planted) ~ TRUE)))
-(summary_stats <- vancouver_trees %>%
+van_trees_flt <- van_trees_flt %>% mutate(planted_on_record = factor(case_when(is.na(date_planted) ~ FALSE, !is.na(date_planted) ~ TRUE)))
+
+(summary_stats <- van_trees_flt %>%
   group_by(planted_on_record) %>%
   summarise(
     mean = mean(diameter),
@@ -160,8 +251,20 @@ vancouver_trees <- vancouver_trees %>% mutate(planted_on_record = factor(case_wh
     max = max(diameter)
 ) %>% arrange(desc(mean)))
 ```
+###### Create a graph that has at least two geom layers.
+Using a boxplot with a text layer is a way to visually summarize and compare the distribution and mean diameter of tree diamters for whether the tree was planted on record or not
+```{r include=TRUE}
+(summary_stats <- van_trees_flt %>% 
+  group_by(planted_on_record) %>% 
+  summarize(mean_diameter = mean(diameter, na.rm = TRUE)))
 
+van_trees_flt %>% 
+  ggplot(aes(x = planted_on_record, y = diameter)) +
+  geom_boxplot() +
+  geom_text(data = summary_stats, aes(x = planted_on_record, y = mean_diameter, label = paste("Mean:", round(mean_diameter, 2))),
+            vjust = -1)
 
+```
 <!----------------------------------------------------------------------------->
 
 ### 1.3 (2 points)
@@ -170,7 +273,15 @@ Based on the operations that you've completed, how much closer are you to answer
 
 <!------------------------- Write your answer here ---------------------------->
 
+Based on the scatter plots that include diameter, I theorize that this metric is not updated as the tree grows. There are many old trees that don't have enough diameter. All research questions including diameter cannot be investigated further. 
 
+Root barriers only exist for trees that have a certain age (relatively young trees), so this mostly explains the differences between the statistics regaring diameter.
+
+Comparing the statistics of trees with NA for date_planted to those without, it is most likely that NA equals to the fact that this trees planting date was not recorded.  
+
+The diameter problem leaves us with the research question on the diversity of trees. The histogram showed us that most trees are rare in neighborhoods and we have calculated a dataframe that contains metrics we can use to investigate further. The proportion of a tree species per neighbourhood could be used to design an indicator for diversity. I will define it as the number of tree species that are above a certain threshold.
+
+Based on this, I will add a new research question: Which tree species is the most prevalent across the neighborhoods? This particular tree species could be considered as the quintessential "Vancouver" tree due to its widespread presence throughout the city.
 <!----------------------------------------------------------------------------->
 
 # Task 2: Tidy your data 
@@ -189,6 +300,12 @@ Based on the definition above, can you identify if your data is tidy or untidy? 
 
 <!--------------------------- Start your work below --------------------------->
 
+- The "neighbourhood_name" column represents the different neighborhoods.
+- The "species_name" column represents the names of different species.
+- The "count" column indicates the number of occurrences of each species in each neighborhood.
+- The "proportion" column shows the proportion of each species count compared to the total count.
+In summary, the data follows the criteria for tidy data, where each row represents an observation, each column represents a variable, and each cell contains a value.
+
 <!----------------------------------------------------------------------------->
 
 ### 2.2 (4 points)
@@ -200,6 +317,17 @@ If your data is untidy, then tidy it! Then, untidy it back to it's original stat
 Be sure to explain your reasoning for this task. Show us the "before" and "after".
 
 <!--------------------------- Start your work below --------------------------->
+I am untidying the data by using pivot_wider() to convert the species names to columns. Now, each rows contains multiple observations
+```{r include=TRUE}
+(untidy_data <- species_counts %>%
+  select(-count) %>%
+  pivot_wider(names_from =  species_name, values_from = proportion))
+```
+The reverse can be done with pivot_longer.
+```{r include=TRUE}
+(tidy_data <- untidy_data %>%
+  pivot_longer(cols = -neighbourhood_name, names_to = "species_name", values_to = "proportion"))
+```
 
 <!----------------------------------------------------------------------------->
 
@@ -209,15 +337,15 @@ Now, you should be more familiar with your data, and also have made progress in 
 
 <!-------------------------- Start your work below ---------------------------->
 
-1.  *FILL_THIS_IN*
-2.  *FILL_THIS_IN*
+1.  Which neighbourhood has the most diverse trees?
+2.  Which tree species is the most prevalent across the neighborhoods?
 
 <!----------------------------------------------------------------------------->
 
 Explain your decision for choosing the above two research questions.
 
 <!--------------------------- Start your work below --------------------------->
-
+As explained above, the state of original data does not allow for the continuation of investigating the other research questions. 
 <!----------------------------------------------------------------------------->
 
 Now, try to choose a version of your data that you think will be appropriate to answer these 2 questions. Use between 4 and 8 functions that we've covered so far (i.e. by filtering, cleaning, tidy'ing, dropping irrelevant columns, etc.).
@@ -225,6 +353,17 @@ Now, try to choose a version of your data that you think will be appropriate to 
 (If it makes more sense, then you can make/pick two versions of your data, one for each research question.) 
 
 <!--------------------------- Start your work below --------------------------->
+```{r}
+final_data <- species_counts %>%
+  filter(count >= 50) %>%
+  mutate(proportion = round(proportion, 3)) %>%
+  select(-count) 
+
+  distinct_neighbourhoods <- final_data %>%
+    distinct(neighbourhood_name)
+  
+  distinct_neighbourhoods
+```
 
 # Task 3: Modelling
 
@@ -234,9 +373,9 @@ Pick a research question from 1.2, and pick a variable of interest (we'll call i
 
 <!-------------------------- Start your work below ---------------------------->
 
-**Research Question**: FILL_THIS_IN
+**Research Question**: Does the existence of a root barrier have an influence on diameter? 
 
-**Variable of interest**: FILL_THIS_IN
+**Variable of interest**: diameter
 
 <!----------------------------------------------------------------------------->
 
@@ -251,7 +390,15 @@ Fit a model or run a hypothesis test that provides insight on this variable with
     -   You could use `lm()` to test for significance of regression coefficients.
 
 <!-------------------------- Start your work below ---------------------------->
+```{r}
+vancouver_trees <- vancouver_trees %>%
+  mutate(root_barrier = as.factor(root_barrier))
 
+model = t.test(diameter ~ root_barrier, data = vancouver_trees)
+
+print(model)
+
+```
 <!----------------------------------------------------------------------------->
 
 ## 3.2 (3 points)
@@ -263,7 +410,11 @@ Produce something relevant from your fitted model: either predictions on Y, or a
 -   Obtain your results using the `broom` package if possible. If your model is not compatible with the broom function you're needing, then you can obtain your results by some other means, but first indicate which broom function is not compatible.
 
 <!-------------------------- Start your work below ---------------------------->
-
+##### p-value
+```{r}
+tidy_result <- tidy(model)
+(p_value <- tidy_result$p.value)
+```
 <!----------------------------------------------------------------------------->
 
 # Task 4: Reading and writing data
@@ -279,6 +430,12 @@ Take a summary table that you made from Task 1, and write it as a csv file in yo
 
 <!-------------------------- Start your work below ---------------------------->
 
+
+```{r}
+output_folder <- here("output")
+csv_file <- file.path(output_folder, "species_counts_neighbourhood.csv")
+write.csv(species_counts, file = csv_file)
+```
 <!----------------------------------------------------------------------------->
 
 ## 4.2 (3 points)
@@ -288,7 +445,11 @@ Write your model object from Task 3 to an R binary file (an RDS), and load it ag
 -   The same robustness and reproducibility criteria as in 4.1 apply here.
 
 <!-------------------------- Start your work below ---------------------------->
-
+```{r}
+rds_file <- file.path(output_folder, "model_root_barrier.rds")
+saveRDS(model, file = rds_file)
+loaded_model <- readRDS(file = rds_file)
+```
 <!----------------------------------------------------------------------------->
 
 # Overall Reproducibility/Cleanliness/Coherence Checklist 
