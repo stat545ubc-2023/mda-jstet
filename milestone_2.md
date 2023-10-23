@@ -90,26 +90,27 @@ were. This will guide your work through milestone 2:
 
 <!-------------------------- Start your work below ---------------------------->
 
-1.  Which neighborhood has the most diverse trees?
+**1. Which neighborhood has the most diverse trees?**
 
 This question aims to measure the diversity of trees in each
 neighborhood, going beyond just counting the number of species.
 
-2.  Does neighborhood affect tree growth speed (by
-    diameter/height\_range\_id)?
+**2. Does neighborhood affect tree growth speed (by
+diameter/height\_range\_id)?**
 
 This question explores the relationship between neighborhood and the
 growth speed of trees, specifically looking at the diameter or height
 range.
 
-3.  Does the existence of a root barrier have an influence on diameter?
+**3. Does the existance of a root barrier have an influence on
+diameter?**
 
 This question investigates whether the presence of a root barrier
 affects the diameter of trees. It involves comparing the distributions
 of tree diameter with and without a root barrier.
 
-4.  Were trees that have no value for date\_planted planted before the
-    start of the records?
+**4. Were trees that have no value for date\_planted planted before the
+start of the records?**
 
 This question examines the relationship between missing values for the
 date\_planted variable and the diameter or height range of trees. It
@@ -177,8 +178,8 @@ for\!
 
 ##### Compute the proportion and counts in each category of one categorical variable across the groups of another categorical variable from your data. Do not use the function `table()`\!
 
-As I am intereseted in tree diversity, it makes sense to calculate how
-many trees if each species occur in each neighborhood.
+As I am interested in tree diversity, it makes sense to calculate how
+many trees of each species occur in each neighborhood.
 
 ``` r
 (species_counts <- vancouver_trees %>%
@@ -208,7 +209,7 @@ many trees if each species occur in each neighborhood.
 
 ##### Create 3 histograms, with each histogram having different sized bins. Pick the “best” one and explain why it is the best.
 
-A bin width of 0.06 is a good choice in the case because it strikes a
+A bin width of 0.06 is a good choice in this case because it strikes a
 balance between capturing important patterns in the data and avoiding
 excessive noise. The smooth and continuous histogram bars make the
 visualization visually appealing and easy to interpret. Additionally, a
@@ -243,7 +244,7 @@ grid.arrange(histogram1, histogram2, histogram3, nrow = 2, top = "Histograms of 
 
 ##### Compute the *range*, *mean*, and *two other summary statistics* of **one numerical variable** across the groups of **one categorical variable** from your data.
 
-Computing summariy statistics for diameter makes sense for this task
+Computing summary statistics for diameter makes sense for this task
 because it allows us to compare this across neighborhoods. Diamater is a
 first indicator for tree growth speed.
 
@@ -277,8 +278,9 @@ vancouver_trees <- vancouver_trees %>% mutate(neighbourhood_name = factor(neighb
 
 ##### Subsetting data for most common tree
 
-Visualizing for one tree only for now so that growth speed differences
-between species do not bias the result.
+Processing the data so we can create a visualization for one tree
+species only for now. That way growth speed differences between species
+do not bias the result.
 
 ``` r
 tree_numbers <- vancouver_trees %>%
@@ -313,6 +315,7 @@ the individual data points and the trend line representing the overall
 relationship between age and diameter.
 
 ``` r
+# removing outliers and NAs
 most_common_flt <- most_common %>%
    mutate(z_score = abs((diameter - mean(diameter)) / sd(diameter))) %>%
   filter(z_score < 3) %>% 
@@ -329,15 +332,16 @@ ggplot(most_common_flt, aes(x = age, y = diameter)) +
 
 ![](milestone_2_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-#### Does the existence of a root barrier have an influence on diameter?
+#### Does the existance of a root barrier have an influence on diameter?
 
 ##### Compute the number of observations for at least one of your categorical variables. Do not use the function `table()`\!
 
 This calculation makes sense for the question because it allows us to
-compare the diameter of trees with and without a root barrier. By
-calculating the mean, median, standard deviation, minimum, maximum, and
-count of observations for each category of the root\_barrier variable,
-we can analyze the differences in diameter between the two groups.
+compare the number of trees width and without a root barrier. By
+additionally calculating the mean, median, standard deviation, minimum,
+maximum, and count of observations for each category of the
+root\_barrier variable, we can analyze the differences in diameter
+between the two groups.
 
 ``` r
 vancouver_trees <- vancouver_trees %>% mutate(root_barrier = factor(root_barrier))
@@ -384,14 +388,16 @@ van_trees_flt_young <- van_trees_flt %>%
 
     ## `geom_smooth()` using formula = 'y ~ x'
 
-![](milestone_2_files/figure-gfm/unnamed-chunk-8-1.png)<!-- --> \#\#\#\#
-Were trees that have no value for date\_planted planted before the start
-of the records? \#\#\#\#\# Create a categorical variable with 3 or more
-groups from an existing numerical variable. You can use this new
-variable in the other tasks\! *An example: age in years into “child,
-teen, adult, senior”.* I adapted this task to only create 2 groups.
+![](milestone_2_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+#### Were trees that have no value for date\_planted planted before the start of the records?
+
+##### Create a categorical variable with 3 or more groups from an existing numerical variable. You can use this new variable in the other tasks\! *An example: age in years into “child, teen, adult, senior”.*
+
+I adapted this task to only create 2 groups.
 
 ``` r
+# creating a new variable to determine if the tree was planted on record
 van_trees_flt <- van_trees_flt %>% mutate(planted_on_record = factor(case_when(is.na(date_planted) ~ FALSE, !is.na(date_planted) ~ TRUE)))
 
 (summary_stats <- van_trees_flt %>%
@@ -450,6 +456,8 @@ research questions are yielding interesting results?
 
 <!------------------------- Write your answer here ---------------------------->
 
+#### Answer
+
 Based on the scatter plots that include diameter, I theorize that this
 metric is not updated as the tree grows. There are many old trees that
 don’t have enough diameter. All research questions including diameter
@@ -494,7 +502,7 @@ Based on the definition above, can you identify if your data is tidy or
 untidy? Go through all your columns, or if you have \>8 variables, just
 pick 8, and explain whether the data is untidy or tidy.
 
-<!--------------------------- Start your work below --------------------------->
+#### Answer
 
   - The “neighbourhood\_name” column represents the different
     neighborhoods.
@@ -520,7 +528,7 @@ original state.
 Be sure to explain your reasoning for this task. Show us the “before”
 and “after”.
 
-<!--------------------------- Start your work below --------------------------->
+#### Answer
 
 I am untidying the data by using pivot\_wider() to convert the species
 names to columns. Now, each rows contains multiple observations
@@ -648,7 +656,7 @@ these.
 
 <!-------------------------- Start your work below ---------------------------->
 
-**Research Question**: Does the existence of a root barrier have an
+**Research Question**: Does the existance of a root barrier have an
 influence on diameter?
 
 **Variable of interest**: diameter
