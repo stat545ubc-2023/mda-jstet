@@ -511,9 +511,11 @@ pick 8, and explain whether the data is untidy or tidy.
   - The “count” column indicates the number of occurrences of each
     species in each neighborhood.
   - The “proportion” column shows the proportion of each species count
-    compared to the total count. In summary, the data follows the
-    criteria for tidy data, where each row represents an observation,
-    each column represents a variable, and each cell contains a value.
+    compared to the total count.
+
+In summary, the data follows the criteria for tidy data, where each row
+represents an observation, each column represents a variable, and each
+cell contains a value.
 
 <!----------------------------------------------------------------------------->
 
@@ -619,32 +621,22 @@ data, one for each research question.)
 <!--------------------------- Start your work below --------------------------->
 
 ``` r
-final_data <- species_counts %>%
+final_diversity <- species_counts %>%
   filter(count >= 50) %>%
   mutate(proportion = round(proportion, 3)) %>%
-  select(-count) 
+  select(-count)
 
-  distinct_neighbourhoods <- final_data %>%
-    distinct(neighbourhood_name)
-  
-  distinct_neighbourhoods
+
+# get species that occur in all neighbourhoods to be able to determine the most prevalent tree accross all neighbourhoods
+tree_species_all <- vancouver_trees %>%
+  group_by(species_name) %>%
+  filter(n_distinct(neighbourhood_name) == n_distinct(vancouver_trees$neighbourhood_name)) %>%
+  pull(species_name) %>%
+  unique()
+
+final_tree_prevalence <- vancouver_trees %>%
+  filter(species_name %in% tree_species_all)
 ```
-
-    ## # A tibble: 22 × 1
-    ## # Groups:   neighbourhood_name [22]
-    ##    neighbourhood_name      
-    ##    <chr>                   
-    ##  1 ARBUTUS-RIDGE           
-    ##  2 DOWNTOWN                
-    ##  3 DUNBAR-SOUTHLANDS       
-    ##  4 FAIRVIEW                
-    ##  5 GRANDVIEW-WOODLAND      
-    ##  6 HASTINGS-SUNRISE        
-    ##  7 KENSINGTON-CEDAR COTTAGE
-    ##  8 KERRISDALE              
-    ##  9 KILLARNEY               
-    ## 10 KITSILANO               
-    ## # ℹ 12 more rows
 
 # Task 3: Modelling
 
